@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %} Registration {% endblock %}
+
+{% block content %}
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <h3>Регистрация</h3>
+
+                <form method="post" class="p-4 border rounded">
+
+                    {% csrf_token %}
+
+                    {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                          <label for="login" class="form-label">Логин</label>
+                          <input type="text" class="form-control" id="login" name="login" required>
+                    </div>
+                    <div class="mb-3">
+                          <label for="email" class="form-label">Почта</label>
+                          <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                          <label for="username" class="form-label">Ваше имя</label>
+                          <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                      <label for="password" class="form-label">Пароль</label>
+                      <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+
+                  <div class="d-grid">
+                      <button type="submit" class="btn btn-primary">Отправить</button>
+                  </div>
+              </form>
+          </div>
+       </div>
+    </div>
+
+{% endblock %}

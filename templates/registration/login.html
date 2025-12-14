@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %} Login {% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <h3>Вход</h3>
+                <form class="p-4 border rounded" method="POST" action="{% url 'login' %}">
+
+                    {% csrf_token %}
+
+                    {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                          <label for="login" class="form-label">Логин</label>
+                          <input type="text" class="form-control" id="login" name="login_or_email" aria-describedby="emailHelp" placeholder="логин или почта" required>
+                    </div>
+                    <div class="mb-3">
+                      <label for="password" class="form-label">Пароль</label>
+                      <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+
+                  <div class="d-grid">
+                      <button type="submit" class="btn btn-primary">Войти</button>
+                  </div>
+              </form>
+          </div>
+       </div>
+    </div>
+{% endblock %}
