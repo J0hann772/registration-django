@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'registration/base.html' %}
 {% block title %} Registration {% endblock %}
 
 {% block content %}
@@ -9,36 +9,65 @@
                 <h3>Регистрация</h3>
 
                 <form method="post" class="p-4 border rounded">
-
                     {% csrf_token %}
 
-                    {% if error %}
-                        <div class="alert alert-danger" role="alert">
-                            {{ error }}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
                         </div>
                     {% endif %}
 
                     <div class="mb-3">
-                          <label for="login" class="form-label">Логин</label>
-                          <input type="text" class="form-control" id="login" name="login" required>
-                    </div>
-                    <div class="mb-3">
-                          <label for="email" class="form-label">Почта</label>
-                          <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                          <label for="username" class="form-label">Ваше имя</label>
-                          <input type="text" class="form-control" id="username" name="username" required>
-                    </div>
-                    <div class="mb-3">
-                      <label for="password" class="form-label">Пароль</label>
-                      <input type="password" class="form-control" id="password" name="password" required>
+                        <label for="{{ form.login.id_for_label }}" class="form-label">Логин</label>
+                        <input type="text" class="form-control {% if form.login.errors %}is-invalid{% endif %}"
+                               id="{{ form.login.id_for_label }}"
+                               name="login"
+                               value="{{ form.login.value|default_if_none:'' }}"
+                               required>
+                        <div class="invalid-feedback">
+                            {{ form.login.errors|striptags }}
+                        </div>
                     </div>
 
-                  <div class="d-grid">
-                      <button type="submit" class="btn btn-primary">Отправить</button>
-                  </div>
-              </form>
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Почта</label>
+                        <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                               id="{{ form.email.id_for_label }}"
+                               name="email"
+                               value="{{ form.email.value|default_if_none:'' }}"
+                               required>
+                        <div class="invalid-feedback">
+                            {{ form.email.errors|striptags }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Ваше имя</label>
+                        <input type="text" class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                               id="{{ form.username.id_for_label }}"
+                               name="username"
+                               value="{{ form.username.value|default_if_none:'' }}"
+                               required>
+                         <div class="invalid-feedback">
+                            {{ form.username.errors|striptags }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">Пароль</label>
+                        <input type="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                               id="{{ form.password.id_for_label }}"
+                               name="password"
+                               required>
+                         <div class="invalid-feedback">
+                            {{ form.password.errors|striptags }}
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Отправить</button>
+                    </div>
+                </form>
           </div>
        </div>
     </div>

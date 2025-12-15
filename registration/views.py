@@ -1,7 +1,8 @@
 from django.db import IntegrityError
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login, get_user_model
 
+from .forms import UserRegistrationForm  # <--- Лучше перенести это в самый верх файла
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout, get_user_model
 
 # Получаем вашу кастомную модель User через рекомендованный метод
 User = get_user_model()
@@ -61,49 +62,26 @@ def login(request):
 
 
 def registration(request):
-    """
-    Обрабатывает регистрацию нового пользователя.
-    """
-    if request.method == "GET":
-        return render(request, "registration/registration.html")
+    # Если пришли данные (нажали кнопку)
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
 
-    elif request.method == "POST":
-        login_val = request.POST.get('login')
-        email_val = request.POST.get('email')
-        password_val = request.POST.get('password')
-        username_val = request.POST.get('username')
-
-        # --- Проверки уникальности (для более дружелюбного сообщения) ---
-        if User.objects.filter(login=login_val).exists():
-            return render(request, 'registration/registration.html', {'error': 'Этот логин уже используется'})
-        elif User.objects.filter(email=email_val).exists():
-            return render(request, 'registration/registration.html', {'error': 'Эта почта уже используется'})
-
-        # --- Создание пользователя ---
-        try:
-            # Используем manager.create_user для хеширования пароля и сохранения
-            user = User.objects.create_user(
-                login=login_val,
-                email=email_val,
-                password=password_val,
-                username=username_val
-            )
-
-            # Автоматически входим после регистрации (опционально)
-            # user = authenticate(request, username=login_val, password=password_val)
-            # if user is not None:
-            #     auth_login(request, user)
-
-            print(f'Пользователь {user.login} успешно зарегистрирован.')
-
-            # Успешная регистрация -> перенаправление на страницу входа
+        # Запуск всех проверок (встроенных, clean_email, clean)
+        if form.is_valid():
+            # Если это ModelForm, можно сразу сохранять
+            # commit=False позволяет изменить объект перед записью в БД
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.save()
             return redirect('login')
 
-        except IntegrityError as e:
-            # Ловит ошибки NOT NULL или другие уникальные ограничения
-            print(f"Ошибка целостности БД: {e}")
-            return render(request, 'registration/registration.html', {'error': 'Произошла ошибка при сохранении данных.'})
+    # Если просто открыли страницу (GET)
+    else:
+        form = UserRegistrationForm()
 
-        except Exception as e:
-            print(f"Общая ошибка при регистрации: {e}")
-            return render(request, 'registration/registration.html', {'error': 'Непредвиденная ошибка сервера.'})
+    # Если форма не валидна, она вернется в шаблон уже с ошибками внутри
+    return render(request, 'registration/registration.html', {'form': form})
+
+def logout(request):
+    auth_logout(request)  # Удаляет сессию пользователя
+    return redirect('main')  # Перенаправляем на главную страницу
