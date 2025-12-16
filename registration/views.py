@@ -1,6 +1,7 @@
 from django.db import IntegrityError
+from django.db.models import Q
 
-from .forms import UserRegistrationForm  # <--- Лучше перенести это в самый верх файла
+from .forms import UserRegistrationForm, PasswordResetStubForm  # <--- Лучше перенести это в самый верх файла
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout, get_user_model
 
@@ -66,25 +67,25 @@ def login(request):
         return render(request, "registration/login.html")
 
     elif request.method == "POST":
-        print('произошла отправка данных для входа')
 
-        # Поле, которое может содержать логин или почту
         login_or_email = request.POST.get('login_or_email')
         password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me')
 
-        # 1. Используем функцию authenticate, которая пройдет по AUTHENTICATION_BACKENDS
-        # и использует LoginOrEmailBackend для поиска по логину ИЛИ email.
         user = authenticate(request, username=login_or_email, password=password)
 
         if user is not None:
-            # 2. Если пользователь найден и пароль верен:
-            auth_login(request, user)  # Сохраняем сессию пользователя
-            print(f'Пользователь {user.get_username()} успешно вошел.')
+            auth_login(request, user)
 
-            # Перенаправляем на главную страницу
+            # --- ЛОГИКА "ЗАПОМНИТЬ МЕНЯ" ---
+            if remember_me:
+                request.session.set_expiry(2592000) # 30 дней
+            else:
+                request.session.set_expiry(0) # До закрытия браузера
+            # -------------------------------
+
             return redirect('main')
         else:
-            # 3. Аутентификация не удалась
             return render(request, 'registration/login.html', {'error': 'Неверный логин/почта или пароль'})
 
 
@@ -93,22 +94,64 @@ def registration(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
 
-        # Запуск всех проверок (встроенных, clean_email, clean)
         if form.is_valid():
-            # Если это ModelForm, можно сразу сохранять
-            # commit=False позволяет изменить объект перед записью в БД
+            # 1. Создаем пользователя, но пока не сохраняем в БД окончательно
             user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
+
+            # 2. Сохраняем пароль в переменную, так как после хеширования (set_password)
+            # мы не сможем использовать его для функции authenticate
+            raw_password = form.cleaned_data['password']
+            user.set_password(raw_password)
+
+            # 3. Сохраняем пользователя в БД
             user.save()
-            return redirect('login')
+
+            # 4. Аутентифицируем пользователя (это обязательно перед login)
+            # Мы передаем user.login, так как это ваше основное поле, и "сырой" пароль
+            user = authenticate(request, username=user.login, password=raw_password)
+
+            # 5. Если аутентификация прошла успешно — выполняем вход
+            if user is not None:
+                auth_login(request, user)
+                # ПЕРЕНАПРАВЛЕНИЕ НА ГЛАВНУЮ
+                return redirect('main')
 
     # Если просто открыли страницу (GET)
     else:
         form = UserRegistrationForm()
 
-    # Если форма не валидна, она вернется в шаблон уже с ошибками внутри
     return render(request, 'registration/registration.html', {'form': form})
 
 def logout(request):
     auth_logout(request)  # Удаляет сессию пользователя
     return redirect('main')  # Перенаправляем на главную страницу
+
+
+def password_reset(request):
+    """
+    Упрощенный сброс пароля (фундамент).
+    Позже здесь добавится отправка email.
+    """
+    if request.method == 'POST':
+        form = PasswordResetStubForm(request.POST)
+        if form.is_valid():
+            login_data = form.cleaned_data['login_or_email']
+            new_pass = form.cleaned_data['new_password']
+
+            # Ищем пользователя
+            try:
+                user = User.objects.get(Q(login=login_data) | Q(email=login_data))
+
+                # Меняем пароль
+                user.set_password(new_pass)
+                user.save()
+
+                # Перенаправляем на вход с сообщением об успехе (можно добавить message framework позже)
+                return redirect('login')
+
+            except User.DoesNotExist:
+                form.add_error('login_or_email', 'Пользователь не найден')
+    else:
+        form = PasswordResetStubForm()
+
+    return render(request, 'registration/password_reset.html', {'form': form})

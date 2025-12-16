@@ -37,3 +37,19 @@ class UserRegistrationForm(forms.ModelForm):
             raise forms.ValidationError("Эта почта уже используется")
 
         return email
+
+
+class PasswordResetStubForm(forms.Form):
+    login_or_email = forms.CharField(label='Логин или Почта', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    new_password = forms.CharField(label='Новый пароль', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    confirm_password = forms.CharField(label='Повторите пароль',
+                                       widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get('new_password')
+        p2 = cleaned_data.get('confirm_password')
+
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("Пароли не совпадают")
+        return cleaned_data
