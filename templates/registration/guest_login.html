@@ -1,0 +1,31 @@
+{% extends 'registration/base.html' %}
+{% block title %} Представьтесь {% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4">
+                <h3>Добро пожаловать!</h3>
+                <p>Для просмотра сайта, пожалуйста, введите ваше имя (как гость).</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="guest_name" class="form-label">Ваше имя</label>
+                        <input type="text" class="form-control" id="guest_name" name="guest_name" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Войти как гость</button>
+                </form>
+                
+                <hr>
+                <div class="text-center">
+                    <p>Или войдите в аккаунт:</p>
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm">Вход</a>
+                    <a href="{% url 'registration' %}" class="btn btn-outline-secondary btn-sm">Регистрация</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

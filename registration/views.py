@@ -10,22 +10,49 @@ User = get_user_model()
 
 # Создаем функции представления здесь.
 
+def guest_login(request):
+    """Страница ввода имени для гостя"""
+    if request.method == 'POST':
+        guest_name = request.POST.get('guest_name')
+        if guest_name:
+            # Сохраняем имя в сессию (это как временная память браузера)
+            request.session['guest_name'] = guest_name
+            # Перенаправляем на главную
+            return redirect('main')
+
+    return render(request, 'registration/guest_login.html')
+
+
 def index(request, login=None):
     """
     Основная страница.
-    login: опциональный аргумент из URL (если вы используете два маршрута).
+    Теперь с защитой: пускает только если есть аккаунт ИЛИ имя гостя.
     """
     user = request.user
 
+    # --- ЛОГИКА ПРОВЕРКИ ГОСТЯ ---
+    # Если пользователь НЕ вошел в аккаунт И у него НЕТ имени гостя в сессии
+    if not user.is_authenticated and 'guest_name' not in request.session:
+        # Перенаправляем его на ввод имени
+        return redirect('guest_login')
+    # -----------------------------
+
     context = {
-        'user_status': 'Гость',
+        'user_status': 'Гость',  # Значение по умолчанию
         'is_authenticated': user.is_authenticated
     }
 
     if user.is_authenticated:
-        context['user_status'] = user.login  # Или user.username, если предпочтительнее
-    elif login:
-        # Это для случая, когда вы перенаправляете на main_login с логином
+        # Если это реальный пользователь - берем его логин
+        context['user_status'] = user.login
+        # (или user.username, смотря что хотите отображать)
+    else:
+        # Если это гость - достаем его имя из сессии
+        guest_name = request.session.get('guest_name')
+        context['user_status'] = f"{guest_name} (Гость)"
+
+    # Если есть аргумент login из URL, он имеет приоритет для отображения (по вашей старой логике)
+    if login:
         context['user_status'] = login
 
     return render(request, "registration/index.html", context)

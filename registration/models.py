@@ -39,8 +39,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     login = models.CharField(max_length=40, unique=True, db_index=True)
 
     # Поля, которые вы использовали ранее
-    email = models.EmailField(max_length=40, unique=True, null=True, blank=True)
-    username = models.CharField(max_length=40)  # Добавим unique
+    email = models.EmailField(max_length=40, unique=True, blank=True)
+    username = models.CharField(max_length=40)
 
     # Обязательные поля для стандартной аутентификации Django
     is_staff = models.BooleanField(default=False)

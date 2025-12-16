@@ -21,6 +21,12 @@
             <a class="btn btn-outline-danger btn-sm" href="{% url 'logout' %}">Выйти</a>
 
             {% else %}
+
+            {% if request.session.guest_name %}
+                 <span class="me-3">Вы вошли как: <b>{{ request.session.guest_name }}</b></span>
+                 <a class="btn btn-outline-secondary btn-sm" href="{% url 'logout' %}">Сменить имя</a>
+            {% endif %}
+
             <a class="me-3" href="{% url 'login' %}">Войти</a>
             <a class="me-3" href="{% url 'registration' %}">Регистрация</a>
         {% endif %}
